@@ -104,7 +104,7 @@ class Client:
         ):
             callback(event, self)
 
-    def make_fetch_request(
+    async def make_fetch_request(
         self, topic: str, replay_type: str, replay_id: bytes, num_requested: int
     ) -> pb2.FetchRequest:
         """Creates a FetchRequest per the proto file."""
@@ -118,7 +118,7 @@ class Client:
                 replay_preset = pb2.ReplayPreset.CUSTOM
             case _:
                 raise ValueError("Invalid Replay Type " + replay_type)
-        return pb2.FetchRequest(
+        return await pb2.FetchRequest(
             topic_name=topic,
             replay_preset=replay_preset,
             replay_id=replay_id if replay_id else None,
