@@ -1,3 +1,4 @@
 avro
 grpcio
 asyncio
+httpx
