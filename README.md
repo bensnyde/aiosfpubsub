@@ -29,14 +29,14 @@ def callback(event, client):
 
 async def main():
     await Client(**{
-        "url": "https://test.salesforce.com",
-        "username": "novasys.integration@centene.com.staging",
-        "password": "ElProgress!23456",
+        "url": "https://login.salesforce.com",
+        "username": "myuser",
+        "password": "mypass",
         "grpc_host": "api.pubsub.salesforce.com",
         "grpc_port": 7443,
         "api_version": "57.0"
     }).subscribe(
-        topic="/event/Continuous_Education_Event__e",
+        topic="/event/My_Event__e",
         replay_type="EARLIEST",
         replay_id=None,
         num_requested=10,

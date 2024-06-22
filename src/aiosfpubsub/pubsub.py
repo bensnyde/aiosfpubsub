@@ -128,4 +128,3 @@ class Client:
             replay_id=replay_id if replay_id else None,
             num_requested=num_requested,
         )
-
