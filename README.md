@@ -4,7 +4,7 @@ An async Python gRPC client for the Salesforce Pub/Sub API.
 https://github.com/forcedotcom/pub-sub-api/blob/main/pubsub_api.proto
 
 # usage 
-```
+```python
 import asyncio
 from datetime import datetime 
 
