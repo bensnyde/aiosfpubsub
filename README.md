@@ -7,15 +7,6 @@ import asyncio
 from datetime import datetime 
 
 
-client = Client(**{
-    "url": "https://login.salesforce.com",
-    "username": "myuser",
-    "password": "mypass",
-    "grpc_host": "api.pubsub.salesforce.com",
-    "grpc_port": 7443,
-    "api_version": "57.0"
-})
-
 def callback(event, client):
     """
     This is a callback that gets passed to the `Client.subscribe()` method.
@@ -26,16 +17,25 @@ def callback(event, client):
         print("Number of events received in FetchResponse: ", len(event.events))
 
         for evt in event.events:
-            print(f"{evt.event.payload}")
+            # Get the event payload and schema, then decode the payload
+            payload_bytes = evt.event.payload
+            json_schema = client.get_schema_json(evt.event.schema_id)
+            decoded_event = client.decode(json_schema, payload_bytes)
+            print(decoded_event)
     else:
         print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] The subscription is active.")
 
-    evnt.latest_replay_id
-
 async def main():
-    await client.subscribe(
-        topic="/event/MyTestTopic__e",
-        replay_type="LATEST",
+    await Client(**{
+        "url": "https://test.salesforce.com",
+        "username": "novasys.integration@centene.com.staging",
+        "password": "ElProgress!23456",
+        "grpc_host": "api.pubsub.salesforce.com",
+        "grpc_port": 7443,
+        "api_version": "57.0"
+    }).subscribe(
+        topic="/event/Continuous_Education_Event__e",
+        replay_type="EARLIEST",
         replay_id=None,
         num_requested=10,
         callback=callback
