@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import xml.etree.ElementTree as et
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import ParseResult, urlparse
 
 import avro.io
@@ -31,7 +31,7 @@ class Client:
         password: str,
         grpc_host: str,
         grpc_port: int,
-        api_version: str = "57.0"
+        api_version: str = "57.0",
     ) -> None:
         self.url: str = url
         self.username: str = username
@@ -46,7 +46,7 @@ class Client:
         self.pb2: pb2 = pb2
         self.apiVersion: str = api_version
 
-    def auth(self):
+    async def auth(self):
         """
         Sends a login request to the Salesforce SOAP API to retrieve a session
         token. The session token is bundled with other identifying information
@@ -65,9 +65,12 @@ class Client:
             + self.password
             + "]]></urn:password></urn:login></soapenv:Body></soapenv:Envelope>"
         )
-        res: httpx.models.Response = httpx.post(
-            str(self.url) + url_suffix, data=xml, headers=headers
-        )
+
+        async with httpx.AsyncClient() as client:
+            res: httpx.models.Response = await client.post(
+                f"{self.url}{url_suffix}", data=xml, headers=headers
+            )
+            
         res_xml: et.Element = et.fromstring(res.content.decode("utf-8"))[0][0][0]
 
         try:
@@ -95,9 +98,13 @@ class Client:
     async def fetch_req_stream(self, topic, replay_type, replay_id, num_requested):
         while True:
             yield self.make_fetch_request(topic, replay_type, replay_id, num_requested)
-            await asyncio.sleep(5)  # Wait for 5 seconds before sending the next FetchRequest
+            await asyncio.sleep(
+                5
+            )  # Wait for 5 seconds before sending the next FetchRequest
 
-    async def subscribe(self, topic, replay_type, replay_id, num_requested, callback: Callable):
+    async def subscribe(
+        self, topic, replay_type, replay_id, num_requested, callback: Callable
+    ):
         async for event in self.stub.Subscribe(
             self.fetch_req_stream(topic, replay_type, replay_id, num_requested),
             metadata=self.metadata,
