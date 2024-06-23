@@ -11,8 +11,8 @@ import certifi
 import grpc
 import httpx
 
-import pubsub_api_pb2 as pb2
-import pubsub_api_pb2_grpc as pb2_grpc
+import aiosfpubsub.pubsub_api_pb2 as pb2
+import aiosfpubsub.pubsub_api_pb2_grpc as pb2_grpc
 
 logger = logging.getLogger(__name__)
 
