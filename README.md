@@ -3,9 +3,15 @@ An async Python gRPC client for the Salesforce Pub/Sub API.
 
 https://github.com/forcedotcom/pub-sub-api/blob/main/pubsub_api.proto
 
+# install
+```bash
+pip install aiosfpubsub
+```
+
 # usage 
 ```python
 import asyncio
+from aiosfpubsub import Client
 from datetime import datetime 
 
 
