@@ -1,9 +1,12 @@
+import io
 import asyncio
 import logging
 import xml.etree.ElementTree as et
-from typing import Callable
+from typing import Callable, Any
 from urllib.parse import ParseResult, urlparse
 
+import avro.io
+import avro.schema
 import certifi
 import grpc
 import httpx
@@ -19,6 +22,8 @@ with open(certifi.where(), "rb") as f:
 
 class Client:
     """Class with helpers to use the Salesforce Pub/Sub API."""
+
+    json_schema_dict: dict[str, Any] = {}
 
     def __init__(
         self,
@@ -36,11 +41,15 @@ class Client:
         grpc_host: str = grpc_host
         grpc_port: int = grpc_port
         self.pubsub_url: str = f"{grpc_host}:{grpc_port}"
+        channel =  grpc.secure_channel(self.pubsub_url, secure_channel_credentials)
+        self.stub = pb2_grpc.PubSubStub(channel)
         self.session_id: str | None = None
         self.pb2: pb2 = pb2
         self.apiVersion: str = api_version
+        
+        self.auth()
 
-    async def auth(self):
+    def auth(self):
         """
         Sends a login request to the Salesforce SOAP API to retrieve a session
         token. The session token is bundled with other identifying information
@@ -60,11 +69,9 @@ class Client:
             + "]]></urn:password></urn:login></soapenv:Body></soapenv:Envelope>"
         )
 
-        async with httpx.AsyncClient() as client:
-            res: httpx.models.Response = await client.post(
-                f"{self.url}{url_suffix}", data=xml, headers=headers
-            )
-            
+        res = httpx.post(
+            f"{self.url}{url_suffix}", data=xml, headers=headers
+        )
         res_xml: et.Element = et.fromstring(res.content.decode("utf-8"))[0][0][0]
 
         try:
@@ -99,7 +106,6 @@ class Client:
     async def subscribe(
         self, topic, replay_type, replay_id, num_requested, callback: Callable
     ):
-        await self.auth()
         async with grpc.aio.secure_channel(self.pubsub_url, secure_channel_credentials) as channel:
             stub = pb2_grpc.PubSubStub(channel)
             async for event in stub.Subscribe(
@@ -128,3 +134,43 @@ class Client:
             replay_id=replay_id if replay_id else None,
             num_requested=num_requested,
         )
+
+    def decode(self, schema, payload: bytes) -> dict[str, Any]:
+        """
+        Uses Avro and the event schema to decode a serialized payload. The
+        `encode()` and `decode()` methods are helper functions to serialize and
+        deserialize the payloads of events that clients will publish and
+        receive using Avro. If you develop an implementation with a language
+        other than Python, you will need to find an Avro library in that
+        language that helps you encode and decode with Avro. When publishing an
+        event, the plaintext payload needs to be Avro-encoded with the event
+        schema for the API to accept it. When receiving an event, the
+        Avro-encoded payload needs to be Avro-decoded with the event schema for
+        you to read it in plaintext.
+        """
+        schema = avro.schema.parse(schema)
+        buf = io.BytesIO(payload)
+        decoder = avro.io.BinaryDecoder(buf)
+        reader = avro.io.DatumReader(schema)
+        ret = reader.read(decoder)
+        return ret
+
+    def get_topic(self, topic_name: str) -> pb2.TopicInfo:
+        """Uses GetTopic RPC to retrieve topic given topic_name."""
+        return self.stub.GetTopic(
+            pb2.TopicRequest(topic_name=topic_name), metadata=self.metadata
+        )
+
+    def get_schema_json(self, schema_id: str):
+        """Uses GetSchema RPC to retrieve schema given a schema ID."""
+        # If the schema is not found in the dictionary, get the schema and store it in the dictionary
+        if (
+            schema_id not in self.json_schema_dict
+            or self.json_schema_dict[schema_id] == None
+        ):
+            res = self.stub.GetSchema(
+                pb2.SchemaRequest(schema_id=schema_id), metadata=self.metadata
+            )
+            self.json_schema_dict[schema_id] = res.schema_json
+
+        return self.json_schema_dict[schema_id]
