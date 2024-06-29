@@ -96,7 +96,7 @@ class Client:
                 ("instanceurl", f"https://{self.url}"),
                 ("tenantid", self.tenant_id),
             )
-        except AttributeError as e:
+        except (et.ParseError, AttributeError) as e:
             logger.error("Error processing auth response", exc_info=e)
             raise
 
