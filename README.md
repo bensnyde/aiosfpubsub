@@ -50,6 +50,7 @@ async def main():
         num_requested=10,
         callback=callback
     )
+
 if __name__ == "__main__":
     asyncio.run(main())
 ```
