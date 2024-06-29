@@ -93,7 +93,7 @@ class Client:
             self.tenant_id = result.find("{*}userInfo/{*}organizationId").text
             self.metadata = (
                 ("accesstoken", self.session_id),
-                ("instanceurl", self.url),
+                ("instanceurl", f"https://{self.url}"),
                 ("tenantid", self.tenant_id),
             )
         except AttributeError as e:
