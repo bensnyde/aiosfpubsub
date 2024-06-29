@@ -57,8 +57,6 @@ class Client:
         self.pb2: pb2 = pb2
         self.api_version: str = api_version
 
-        self.auth()
-
     @staticmethod
     def _default_channel_credentials() -> grpc.ChannelCredentials:
         with open(certifi.where(), "rb") as f:
@@ -108,7 +106,7 @@ class Client:
 
         Raises:
             httpx.HTTPStatusError: If authentication fails with an HTTP error status.
-            Exception: If any issues parsing the Salesforce authentication response payload.
+            AttributeError: If any issues parsing the Salesforce authentication response payload.
         """
         try:
             response: httpx.Response = httpx.post(
@@ -117,7 +115,7 @@ class Client:
                 headers={"content-type": "text/xml", "SOAPAction": "Login"},
             )
             self._process_auth_response(response.content)
-        except (httpx.HTTPStatusError, Exception) as e:
+        except (httpx.HTTPStatusError, AttributeError) as e:
             logger.error("Failed to authenticate", exc_info=e)
             raise
 
