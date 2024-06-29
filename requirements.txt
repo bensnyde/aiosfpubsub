@@ -2,3 +2,5 @@ avro
 grpcio
 asyncio
 httpx
+defusedxml
+protobuf

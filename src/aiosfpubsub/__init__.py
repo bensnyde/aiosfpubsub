@@ -1,1 +1,1 @@
-from .pubsub import Client
+from .client import Client

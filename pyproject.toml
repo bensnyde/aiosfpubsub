@@ -7,6 +7,7 @@ authors = [
 description = "An async Python gRPC client for the Salesforce PubSub API."
 readme = "README.md"
 requires-python = ">=3.8"
+keywords = ["sf", "salesforce", "pubsub", "pub/sub"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -19,3 +20,31 @@ Issues = "https://github.com/bensnyde/aiosfpubsub/issues"
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | dist
+)/
+'''
+
+[tool.isort]
+atomic = true
+profile = "black"
+line_length = 88
+skip_gitignore = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "path/to/file"]
+tests = ["B201", "B301"]
+skips = ["B101", "B601"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
