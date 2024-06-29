@@ -1,6 +1,6 @@
 [project]
 name = "aiosfpubsub"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
   { name="Benton Snyder", email="benton@bensnyde.me" },
 ]
