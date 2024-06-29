@@ -5,6 +5,12 @@ from aiosfpubsub.client import Client
 
 @pytest.fixture
 def client() -> Client:
+    """
+    Fixture that provides a configured instance of Client for testing.
+
+    Returns:
+        Client: An instance of Client initialized with test credentials.
+    """
     return Client(
         url="https://test.salesforce.com",
         username="test_user",
@@ -18,6 +24,16 @@ def client() -> Client:
 @pytest.mark.asyncio
 @patch("aiosfpubsub.client.httpx.post")
 async def test_auth_success(mock_post, client: Client) -> None:
+    """
+    Test case to verify successful authentication with mock HTTP response.
+
+    Args:
+        mock_post (Mock): Mock object for httpx.post method.
+        client (Client): Instance of Client to test authentication.
+
+    Raises:
+        AssertionError: If authentication fails or attributes are not set correctly.
+    """
     mock_xml_content: str = b"""
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
             <soapenv:Body>
@@ -74,7 +90,16 @@ async def test_auth_success(mock_post, client: Client) -> None:
 @pytest.mark.asyncio
 @patch("aiosfpubsub.client.httpx.post")
 async def test_auth_failure(mock_post, client: Client) -> None:
+    """
+    Test case to verify authentication failure handling with mock HTTP error.
+
+    Args:
+        mock_post (Mock): Mock object for httpx.post method.
+        client (Client): Instance of Client to test authentication failure.
+
+    Raises:
+        pytest.raises: Expects Exception to be raised during authentication failure.
+    """
     mock_post.side_effect = Exception("Mock HTTP Error")
     with pytest.raises(Exception):
-        await client.auth()
-
+        client.auth()
